@@ -1,59 +1,73 @@
 package com.example.speedsystem.service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.example.speedsystem.entities.Zona;
 import com.example.speedsystem.repository.ZonaRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class ZonaService {
-    
+
     @Autowired
     private ZonaRepository zonaRepository;
 
-    public List<Zona> listarZona(){
+    private final String OSM_URL = "https://nominatim.openstreetmap.org/search";
+
+    public List<Zona> listarZonas() {
         return zonaRepository.findAll();
     }
 
-    public Optional<Zona> obtenerZonaPorId(Long id){
-        return zonaRepository.findById(id);
+    public Zona guardarZona(Zona zona) {
+    // Construimos la URL para buscar la zona en OpenStreetMap (Nominatim)
+    String url = String.format(
+            "%s?q=%s&format=json&polygon_geojson=1",
+            OSM_URL,
+            zona.getNombre().replace(" ", "+")
+    );
+
+    RestTemplate restTemplate = new RestTemplate();
+
+    // Llamamos a la API y especificamos el tipo de respuesta esperado (lista de mapas)
+    ResponseEntity<List<Map<String, Object>>> responseEntity = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+    );
+
+    List<Map<String, Object>> response = responseEntity.getBody();
+
+    // Procesamos la respuesta de Nominatim
+    if (response != null && !response.isEmpty()) {
+        Map<String, Object> data = response.get(0); // Tomamos el primer resultado
+
+        // Obtenemos latitud y longitud
+        if (data.get("lat") != null && data.get("lon") != null) {
+            zona.setLatitud(Double.parseDouble(data.get("lat").toString()));
+            zona.setLongitud(Double.parseDouble(data.get("lon").toString()));
+        }
+
+        // Guardamos el geojson (área delimitada)
+        Object geojson = data.get("geojson");
+        if (geojson != null) {
+            zona.setLimite(geojson.toString());
+        }
     }
 
-    public Zona crearZona(Zona zona){
-        return zonaRepository.save(zona);
-    }
+    // Guardamos la zona en base de datos
+    return zonaRepository.save(zona);
+}
 
-    public Zona actualizarZona(Long id, Zona zonaActualizada){
-        return zonaRepository.findById(id)
-            .map(zona -> {
-                zona.setName(zonaActualizada.getName());
-                zona.setLatitud(zonaActualizada.getLatitud());
-                zona.setLongitud(zonaActualizada.getLongitud());
-                zona.setSpeedLimit(zonaActualizada.getSpeedLimit());
-                return zonaRepository.save(zona);
-            })
-            . orElseThrow(() -> new RuntimeException("Zona no encontrada"));
-    }
 
-    public void eliminarZona(Long id){
-        zonaRepository.deleteById(id);
+    public Zona obtenerZona(Long id) {
+        return zonaRepository.findById(id).orElse(null);
     }
-
-    public Zona obtenerZonaCercana(double latitud, double longitud){
-        return zonaRepository.findAll().stream()
-            .min(Comparator.comparingDouble(
-                z -> distancia(latitud, longitud, z.getLatitud(), z.getLongitud())
-            ))
-            .orElse(null);
-    }
-
-    private double distancia(double lat1, double lon1, double lat2, double lon2) {
-        return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2));
-    }
-
 }

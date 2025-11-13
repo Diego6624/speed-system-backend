@@ -18,11 +18,11 @@ public class Zona {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "nombre")
+    private String nombre;
 
-    @Column(name = "speedLimit")
-    private Double speedLimit;
+    @Column(name = "limite")
+    private String limite;
 
     @Column(name = "latitud")
     private Double latitud;
