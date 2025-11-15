@@ -24,6 +24,9 @@ public class Zona {
     @Column(name = "limite")
     private String limite;
 
+    @Column(name = "limiteVelocidad")
+    private Integer limiteVelocidad;
+
     @Column(name = "latitud")
     private Double latitud;
 
