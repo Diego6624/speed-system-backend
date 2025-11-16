@@ -19,12 +19,11 @@ public class OSMService {
 
     public Integer obtenerVelocidadMaxima(double lat, double lon) {
 
-            String query = """
-                [out:json][timeout:10];
-                way["highway"]["maxspeed"](around:40,%f,%f);
-                out tags qt;
-            """.formatted(lat, lon);
-
+        String query = """
+                    [out:json][timeout:10];
+                    way["highway"](around:40,%f,%f);
+                    out tags qt;
+                """.formatted(lat, lon);
 
         try {
             URL url = new URL("https://overpass-api.de/api/interpreter");
@@ -56,19 +55,29 @@ public class OSMService {
     }
 
     private Integer extraerMaxSpeed(JsonObject tags) {
-        if (tags == null) return null;
+        if (tags == null)
+            return null;
 
+        // 1. Si existe maxspeed, usarlo
         if (tags.has("maxspeed")) {
             return parseSpeed(tags.get("maxspeed").getAsString());
         }
 
+        // 2. Si existe maxspeed:conditional, tomar el primer valor numérico
         if (tags.has("maxspeed:conditional")) {
             String val = tags.get("maxspeed:conditional").getAsString();
             return parseSpeed(val.split(" ")[0]);
         }
 
+        // 3. Si existe fuente de velocidad por defecto (source:maxspeed)
         if (tags.has("source:maxspeed")) {
             return velocidadPorDefecto(tags.get("source:maxspeed").getAsString());
+        }
+
+        // 4. Si conocemos el tipo de vía, aplicar velocidad por defecto
+        if (tags.has("highway")) {
+            String highway = tags.get("highway").getAsString();
+            return velocidadPorDefectoPorTipo(highway);
         }
 
         return null;
@@ -76,7 +85,8 @@ public class OSMService {
 
     private Integer parseSpeed(String raw) {
         raw = raw.replaceAll("[^0-9]", "");
-        if (raw.isEmpty()) return null;
+        if (raw.isEmpty())
+            return null;
         return Integer.parseInt(raw);
     }
 
@@ -87,4 +97,15 @@ public class OSMService {
             default -> null;
         };
     }
+
+    private Integer velocidadPorDefectoPorTipo(String highway) {
+    return switch (highway) {
+        case "trunk" -> 90;
+        case "primary" -> 60;
+        case "secondary" -> 50;
+        case "tertiary" -> 40;
+        case "residential" -> 30;
+        default -> null;
+    };
+}
 }
