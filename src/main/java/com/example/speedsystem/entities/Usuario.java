@@ -23,7 +23,7 @@ public class Usuario {
     private String correo;
 
     @Column(name = "password")
-    private String paswword;
+    private String password;
 
     @Column(name = "nombre")
     private String nombre;

@@ -24,7 +24,7 @@ public class UsuarioService {
         u.setNombre(req.getNombre());
         u.setApellido(req.getApellido());
         u.setCorreo(req.getCorreo());
-        u.setPaswword(passwordEncoder.encode(req.getPaswword()));
+        u.setPassword(passwordEncoder.encode(req.getPaswword()));
 
         return repo.save(u);
     }
@@ -44,8 +44,8 @@ public class UsuarioService {
             u.setApellido(datos.getApellido());
         if (datos.getCorreo() != null)
             u.setCorreo(datos.getCorreo());
-        if (datos.getPaswword() != null)
-            u.setPaswword(passwordEncoder.encode(datos.getPaswword()));
+        if (datos.getPassword() != null)
+            u.setPassword(passwordEncoder.encode(datos.getPassword()));
 
         return repo.save(u);
     }

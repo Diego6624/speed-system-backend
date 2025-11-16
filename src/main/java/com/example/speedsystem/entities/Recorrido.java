@@ -1,5 +1,6 @@
 package com.example.speedsystem.entities;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -18,7 +19,7 @@ import lombok.Data;
 public class Recorrido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "")
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne
@@ -27,8 +28,13 @@ public class Recorrido {
 
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
-    private Double distancia;
+    private Double distanciaKm;
     private Double velocidadMax;
-    private Double velocidadPromedio;
-    private int alertasExceso;
+    private Double velocidadProm;
+
+    private Integer excesosVelocidad;
+
+    public Long getDuracionMin() {
+        return Duration.between(fechaInicio, fechaFin).toMinutes();
+    }
 }

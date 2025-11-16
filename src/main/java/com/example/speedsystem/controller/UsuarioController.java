@@ -17,14 +17,14 @@ public class UsuarioController {
     @GetMapping("/me")
     public Usuario me(@RequestHeader("Authorization") String header) {
         String token = header.replace("Bearer ", "");
-        String email = jwtService.obtenerEmail(token);
+        String email = jwtService.extraerCorreo(token);
         return usuarioService.getPorEmail(email);
     }
 
     @PutMapping("/update")
     public Usuario update(@RequestHeader("Authorization") String header, @RequestBody Usuario datos) {
         String token = header.replace("Bearer ", "");
-        String email = jwtService.obtenerEmail(token);
+        String email = jwtService.extraerCorreo(token);
         return usuarioService.actualizar(email, datos);
     }
 }

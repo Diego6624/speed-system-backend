@@ -1,6 +1,7 @@
 package com.example.speedsystem.controller;
 
 import com.example.speedsystem.dto.AuthRequest;
+import com.example.speedsystem.dto.AuthResponse;
 import com.example.speedsystem.dto.RegisterRequest;
 import com.example.speedsystem.entities.Usuario;
 import com.example.speedsystem.service.JWTService;
@@ -25,11 +26,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody AuthRequest request) {
-        Usuario u = usuarioService.getPorEmail(request.getEmail());
-        if (u == null || !passwordEncoder.matches(request.getPassword(), u.getPaswword())) {
-            return "Credenciales inválidas";
+    public AuthResponse login(@RequestBody AuthRequest request) {
+        Usuario u = usuarioService.getPorEmail(request.getCorreo());
+        if (u == null || !passwordEncoder.matches(request.getPassword(), u.getPassword())) {
+            throw new RuntimeException("Credenciales inválidas");
         }
-        return jwtService.generarToken(u.getCorreo());
+
+        String token = jwtService.generarToken(u.getCorreo());
+        return new AuthResponse(token);
     }
 }
