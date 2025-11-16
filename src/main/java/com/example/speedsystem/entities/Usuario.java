@@ -19,11 +19,17 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "email")
-    private String email;
+    @Column(name = "correo", unique = true)
+    private String correo;
 
-    @Column(name = "password", unique = true)
-    private String password;
+    @Column(name = "password")
+    private String paswword;
+
+    @Column(name = "nombre")
+    private String nombre;
+
+    @Column(name = "apellido")
+    private String apellido;
 
     @Column(name = "fechaRegistro")
     private LocalDateTime fechaRegistro = LocalDateTime.now();
