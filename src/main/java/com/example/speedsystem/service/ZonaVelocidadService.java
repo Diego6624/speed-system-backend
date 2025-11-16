@@ -15,3 +15,4 @@ public class ZonaVelocidadService {
         return osmService.obtenerVelocidadMaxima(lat, lon);
     }
 }
+

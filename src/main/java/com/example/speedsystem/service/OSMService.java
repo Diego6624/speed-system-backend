@@ -1,71 +1,74 @@
 package com.example.speedsystem.service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OSMService {
 
-    private static final String OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
+    private final Gson gson = new Gson();
 
     public Integer obtenerVelocidadMaxima(double lat, double lon) {
-        try {
+
             String query = """
-                [out:json];
-                way(around:25,%f,%f)["highway"];
-                out tags;
-                """.formatted(lat, lon);
+                [out:json][timeout:10];
+                way["highway"]["maxspeed"](around:40,%f,%f);
+                out tags qt;
+            """.formatted(lat, lon);
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(OVERPASS_API_URL + "?data=" + query.replace("\n", "")))
-                    .header("User-Agent", "MiAppEstudiante/1.0") // obligatorio para OSM
-                    .GET()
-                    .build();
 
-            HttpResponse<String> response = HttpClient.newHttpClient()
-                    .send(request, HttpResponse.BodyHandlers.ofString());
+        try {
+            URL url = new URL("https://overpass-api.de/api/interpreter");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-            return extraerMaxSpeed(response.body());
+            String body = "data=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
+            conn.getOutputStream().write(body.getBytes());
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+            JsonObject json = gson.fromJson(br, JsonObject.class);
+            JsonArray elements = json.getAsJsonArray("elements");
+
+            if (elements == null || elements.size() == 0)
+                return null;
+
+            JsonObject way = elements.get(0).getAsJsonObject();
+            JsonObject tags = way.getAsJsonObject("tags");
+
+            return extraerMaxSpeed(tags);
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    private Integer extraerMaxSpeed(String json) {
-        JsonObject root = JsonParser.parseString(json).getAsJsonObject();
-        var elements = root.getAsJsonArray("elements");
-        if (elements == null || elements.isEmpty()) return null;
-
-        for (var element : elements) {
-            JsonObject obj = element.getAsJsonObject();
-            if (!obj.has("tags")) continue;
-            Integer speed = extraerMaxSpeed(obj.get("tags").getAsJsonObject());
-            if (speed != null) return speed;
-        }
-
-        return null;
-    }
-
     private Integer extraerMaxSpeed(JsonObject tags) {
         if (tags == null) return null;
 
-        // 1. maxspeed explícito
         if (tags.has("maxspeed")) {
             return parseSpeed(tags.get("maxspeed").getAsString());
         }
 
-        // 2. maxspeed condicional
         if (tags.has("maxspeed:conditional")) {
             String val = tags.get("maxspeed:conditional").getAsString();
-            String extracted = val.split(" ")[0];
-            return parseSpeed(extracted);
+            return parseSpeed(val.split(" ")[0]);
+        }
+
+        if (tags.has("source:maxspeed")) {
+            return velocidadPorDefecto(tags.get("source:maxspeed").getAsString());
         }
 
         return null;
@@ -75,5 +78,13 @@ public class OSMService {
         raw = raw.replaceAll("[^0-9]", "");
         if (raw.isEmpty()) return null;
         return Integer.parseInt(raw);
+    }
+
+    private Integer velocidadPorDefecto(String src) {
+        return switch (src) {
+            case "PE:urban" -> 50;
+            case "PE:rural" -> 90;
+            default -> null;
+        };
     }
 }
