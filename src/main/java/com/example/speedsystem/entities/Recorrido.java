@@ -31,10 +31,11 @@ public class Recorrido {
     private Double distanciaKm;
     private Double velocidadMax;
     private Double velocidadProm;
-
     private Integer excesosVelocidad;
-
+    private Boolean activo;
+    
     public Long getDuracionMin() {
+        if (fechaInicio == null || fechaFin == null) return 0L;
         return Duration.between(fechaInicio, fechaFin).toMinutes();
     }
 }
