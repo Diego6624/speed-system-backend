@@ -16,7 +16,7 @@ public class UsuarioService {
 
     public Usuario registrar(RegisterRequest req) {
 
-        if (req.getPaswword() == null || req.getPaswword().isBlank()) {
+        if (req.getPassword() == null || req.getPassword().isBlank()) {
             throw new IllegalArgumentException("La contraseña no puede estar vacía");
         }
 
@@ -24,7 +24,7 @@ public class UsuarioService {
         u.setNombre(req.getNombre());
         u.setApellido(req.getApellido());
         u.setCorreo(req.getCorreo());
-        u.setPassword(passwordEncoder.encode(req.getPaswword()));
+        u.setPassword(passwordEncoder.encode(req.getPassword()));
 
         return repo.save(u);
     }
