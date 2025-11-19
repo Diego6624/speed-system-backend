@@ -29,12 +29,12 @@ public class UsuarioService {
         return repo.save(u);
     }
 
-    public Usuario getPorEmail(String correo) {
+    public Usuario getPorCorreo(String correo) {
         return repo.findByCorreo(correo).orElse(null);
     }
 
     public Usuario actualizar(String correo, Usuario datos) {
-        Usuario u = getPorEmail(correo);
+        Usuario u = getPorCorreo(correo);
         if (u == null)
             return null;
 

@@ -18,7 +18,7 @@ public class UsuarioController {
     public Usuario me(@RequestHeader("Authorization") String header) {
         String token = header.replace("Bearer ", "");
         String email = jwtService.extraerCorreo(token);
-        return usuarioService.getPorEmail(email);
+        return usuarioService.getPorCorreo(email);
     }
 
     @PutMapping("/update")

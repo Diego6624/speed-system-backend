@@ -27,7 +27,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest request) {
-        Usuario u = usuarioService.getPorEmail(request.getCorreo());
+        Usuario u = usuarioService.getPorCorreo(request.getCorreo());
         if (u == null || !passwordEncoder.matches(request.getPassword(), u.getPassword())) {
             throw new RuntimeException("Credenciales inválidas");
         }

@@ -26,13 +26,13 @@ public class RecorridoController {
 
     @GetMapping("/my")
     public ResponseEntity<List<RecorridoResponse>> getRecorrido(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
-        Usuario usuario = usuarioService.getPorEmail(user.getUsername());
+        Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
         return ResponseEntity.ok(recorridoService.getRecorrido(usuario.getId()));
     }
 
     @GetMapping("/my/weekly-stats")
     public ResponseEntity<RecorridoSemanalResponse> getRecorridoSemanalResponse(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
-        Usuario usuario = usuarioService.getPorEmail(user.getUsername());
+        Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
         return ResponseEntity.ok(recorridoService.getRecorridoSemanalResponse(usuario.getId()));
     }
 }
