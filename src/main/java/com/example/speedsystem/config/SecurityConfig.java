@@ -1,5 +1,6 @@
 package com.example.speedsystem.config;
 
+import com.example.speedsystem.service.CustomUserDetailsService;
 import com.example.speedsystem.service.JWTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JWTService jwtService;
-    private final org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
