@@ -1,36 +1,45 @@
 package com.example.speedsystem.config;
 
+import com.example.speedsystem.service.JWTService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    // @Bean
-    // public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    //     http.csrf(csrf -> csrf.disable())
-    //         .authorizeHttpRequests(auth -> auth
-    //                 .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
-    //                 .anyRequest().authenticated()
-    //         )
-    //         .httpBasic(Customizer.withDefaults());
-    //     return http.build();
-    // }
+    private final JWTService jwtService;
+    private final org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
-    // Para pruebas sin seguridad
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
+        return http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            );
+                .requestMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
 
-        return http.build();
+    @Bean
+    public JWTAuthFilter jwtAuthFilter() {
+        return new JWTAuthFilter(jwtService, userDetailsService);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
