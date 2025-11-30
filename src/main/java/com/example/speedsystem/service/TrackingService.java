@@ -1,6 +1,7 @@
 package com.example.speedsystem.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +21,7 @@ public class TrackingService {
 
     private final RecorridoRepository recorridoRepository;
     private final UsuarioRepository usuarioRepository;
-    private final PuntoRecorridoService puntoRecorridoService; // 🔑 delegamos aquí
+    private final PuntoRecorridoService puntoRecorridoService;
 
     public Recorrido iniciarRecorrido(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -46,10 +47,8 @@ public class TrackingService {
 
         if (!recorrido.getActivo()) return;
 
-        // 🔑 delegamos la creación del punto al PuntoRecorridoService
-        PuntoRecorrido punto = puntoRecorridoService.registrarPunto(recorridoId, lat, lng, velocidad);
+        PuntoRecorrido punto = puntoRecorridoService.registrarPunto(recorrido, lat, lng, velocidad);
 
-        // Si hubo exceso de velocidad, actualizamos el contador en el recorrido
         if (Boolean.TRUE.equals(punto.getExceso())) {
             recorrido.setExcesosVelocidad(recorrido.getExcesosVelocidad() + 1);
             recorridoRepository.save(recorrido);
@@ -63,7 +62,6 @@ public class TrackingService {
         recorrido.setActivo(false);
         recorrido.setFechaFin(LocalDateTime.now());
 
-        // Calcular métricas al finalizar
         List<PuntoRecorrido> puntos = puntoRecorridoService.listarPorRecorrido(recorridoId);
         if (!puntos.isEmpty()) {
             double distancia = calcularDistancia(puntos);
@@ -76,6 +74,36 @@ public class TrackingService {
         }
 
         return recorridoRepository.save(recorrido);
+    }
+
+    // 🔧 Nuevo método: análisis semanal
+    public AnalisisSemanal obtenerAnalisisSemanal(Long usuarioId) {
+        LocalDateTime inicioSemana = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
+        List<Recorrido> recorridos = recorridoRepository.findByUsuarioIdAndFechaInicioAfter(usuarioId, inicioSemana);
+
+        double totalKm = recorridos.stream()
+                .mapToDouble(r -> r.getDistanciaKm() != null ? r.getDistanciaKm() : 0)
+                .sum();
+
+        long totalMin = recorridos.stream()
+                .mapToLong(r -> r.getDuracionMin() != null ? r.getDuracionMin() : 0)
+                .sum();
+
+        double maxVel = recorridos.stream()
+                .mapToDouble(r -> r.getVelocidadMax() != null ? r.getVelocidadMax() : 0)
+                .max()
+                .orElse(0);
+
+        double promVel = recorridos.stream()
+                .mapToDouble(r -> r.getVelocidadProm() != null ? r.getVelocidadProm() : 0)
+                .average()
+                .orElse(0);
+
+        int excesos = recorridos.stream()
+                .mapToInt(r -> r.getExcesosVelocidad() != null ? r.getExcesosVelocidad() : 0)
+                .sum();
+
+        return new AnalisisSemanal(totalKm, totalMin, maxVel, promVel, excesos);
     }
 
     // 🔧 Método auxiliar para calcular distancia total
@@ -99,4 +127,17 @@ public class TrackingService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     }
+
+    // DTO interno para devolver el análisis semanal
+    public record AnalisisSemanal(
+            double totalKm,
+            long totalMin,
+            double velocidadMax,
+            double velocidadProm,
+            int excesosVelocidad
+    ) {}
+
+    public List<Recorrido> obtenerHistorial(Long usuarioId) {
+    return recorridoRepository.findByUsuarioIdOrderByFechaInicioDesc(usuarioId);
+}
 }

@@ -13,23 +13,17 @@ import com.example.speedsystem.repository.PuntoRecorridoRepository;
 public class PuntoRecorridoService {
 
     private final PuntoRecorridoRepository puntoRecorridoRepository;
-    private final RecorridoService recorridoService;
     private final ZonaVelocidadService zonaVelocidadService;
 
     public PuntoRecorridoService(
             PuntoRecorridoRepository puntoRecorridoRepository,
-            RecorridoService recorridoService,
             ZonaVelocidadService zonaVelocidadService) {
 
         this.puntoRecorridoRepository = puntoRecorridoRepository;
-        this.recorridoService = recorridoService;
         this.zonaVelocidadService = zonaVelocidadService;
     }
 
-    public PuntoRecorrido registrarPunto(Long recorridoId, double lat, double lng, double velocidadVehiculo) {
-
-        Recorrido recorrido = recorridoService.obtenerPorId(recorridoId);
-
+    public PuntoRecorrido registrarPunto(Recorrido recorrido, double lat, double lng, double velocidadVehiculo) {
         // Obtener velocidad máxima de la zona
         Integer velMax = zonaVelocidadService.obtenerVelocidadMaxima(lat, lng);
         boolean hayExceso = (velMax != null && velocidadVehiculo > velMax);

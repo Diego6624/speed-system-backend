@@ -1,6 +1,7 @@
 package com.example.speedsystem.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +31,6 @@ public class TrackingController {
         @RequestBody TrackingRequest req,
         Principal principal
     ) {
-        // Opcional: validar que el recorrido pertenece al usuario del token
         trackingService.registrarPunto(id, req.lat(), req.lng(), req.velocidad());
     }
 
@@ -39,8 +39,21 @@ public class TrackingController {
         @PathVariable Long id,
         Principal principal
     ) {
-        // Opcional: validar que el recorrido pertenece al usuario del token
         return trackingService.finalizarRecorrido(id);
+    }
+
+    // 🔧 Nuevo endpoint: análisis semanal
+    @GetMapping("/analisis-semanal")
+    public TrackingService.AnalisisSemanal analisisSemanal(Principal principal) {
+        Usuario usuario = usuarioService.getPorCorreo(principal.getName());
+        return trackingService.obtenerAnalisisSemanal(usuario.getId());
+    }
+
+    // 🔧 Nuevo endpoint: historial de recorridos
+    @GetMapping("/historial")
+    public List<Recorrido> historial(Principal principal) {
+        Usuario usuario = usuarioService.getPorCorreo(principal.getName());
+        return trackingService.obtenerHistorial(usuario.getId());
     }
 
     public record TrackingRequest(Double lat, Double lng, Double velocidad) {}
