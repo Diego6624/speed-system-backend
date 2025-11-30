@@ -3,6 +3,8 @@ package com.example.speedsystem.service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -21,12 +23,31 @@ public class JWTService {
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
-    
+
     public String extraerCorreo(String token) {
-        return Jwts.parser()
-                .setSigningKey(secretKey) // asegúrate que tu secretKey sea la misma que usas para generar el token
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public Date extraerExpiracion(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+    }
+
+    public boolean estaExpirado(String token) {
+        return extraerExpiracion(token).before(new Date());
+    }
+
+    public boolean esTokenValido(String token, UserDetails userDetails) {
+        final String correo = extraerCorreo(token);
+        return (correo.equals(userDetails.getUsername()) && !estaExpirado(token));
     }
 }
