@@ -2,14 +2,12 @@ package com.example.speedsystem.controller;
 
 import java.security.Principal;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.speedsystem.entities.Recorrido;
 import com.example.speedsystem.entities.Usuario;
 import com.example.speedsystem.service.TrackingService;
 import com.example.speedsystem.service.UsuarioService;
-import org.springframework.security.core.userdetails.User;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -28,21 +26,21 @@ public class TrackingController {
 
     @PostMapping("/{id}/tracking")
     public void tracking(
-      @PathVariable Long id,
-      @RequestBody TrackingRequest req,
-      @AuthenticationPrincipal User user
+        @PathVariable Long id,
+        @RequestBody TrackingRequest req,
+        Principal principal
     ) {
-      // Opcional: validar que el recorrido pertenece al usuario del token
-      trackingService.registrarPunto(id, req.lat(), req.lng(), req.velocidad());
+        // Opcional: validar que el recorrido pertenece al usuario del token
+        trackingService.registrarPunto(id, req.lat(), req.lng(), req.velocidad());
     }
 
     @PutMapping("/{id}/finalizar")
     public Recorrido finalizar(
-      @PathVariable Long id,
-      @AuthenticationPrincipal User user
+        @PathVariable Long id,
+        Principal principal
     ) {
-      // Opcional: validar que el recorrido pertenece al usuario del token
-      return trackingService.finalizarRecorrido(id);
+        // Opcional: validar que el recorrido pertenece al usuario del token
+        return trackingService.finalizarRecorrido(id);
     }
 
     public record TrackingRequest(Double lat, Double lng, Double velocidad) {}
