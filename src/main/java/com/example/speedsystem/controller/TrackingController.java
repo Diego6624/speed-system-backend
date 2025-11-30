@@ -21,7 +21,11 @@ public class TrackingController {
 
     @PostMapping("/iniciar")
     public Recorrido iniciar(Principal principal) {
+        System.out.println("👤 Principal.getName(): " + principal.getName());
         Usuario usuario = usuarioService.getPorCorreo(principal.getName());
+        if (usuario == null) {
+            throw new RuntimeException("Usuario no existe en DB: " + principal.getName());
+        }
         return trackingService.iniciarRecorrido(usuario.getId());
     }
 
