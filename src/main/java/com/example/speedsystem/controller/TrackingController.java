@@ -1,5 +1,7 @@
 package com.example.speedsystem.controller;
 
+import java.security.Principal;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,9 +21,9 @@ public class TrackingController {
     private final UsuarioService usuarioService;
 
     @PostMapping("/iniciar")
-    public Recorrido iniciar(@AuthenticationPrincipal User user) {
-      Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
-      return trackingService.iniciarRecorrido(usuario.getId());
+    public Recorrido iniciar(Principal principal) {
+        Usuario usuario = usuarioService.getPorCorreo(principal.getName());
+        return trackingService.iniciarRecorrido(usuario.getId());
     }
 
     @PostMapping("/{id}/tracking")
