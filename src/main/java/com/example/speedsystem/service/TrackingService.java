@@ -1,6 +1,7 @@
 package com.example.speedsystem.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,13 @@ public class TrackingService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no existe"));
 
+        // Verificar si ya hay un recorrido activo
+        Optional<Recorrido> activo = recorridoRepository.findByUsuarioIdAndActivoTrue(usuarioId);
+        if (activo.isPresent()) {
+            return activo.get(); // devolver el mismo recorrido activo
+        }
+
+        // Crear uno nuevo si no hay activo
         Recorrido recorrido = new Recorrido();
         recorrido.setUsuario(usuario);
         recorrido.setFechaInicio(LocalDateTime.now());
@@ -33,7 +41,7 @@ public class TrackingService {
 
         return recorridoRepository.save(recorrido);
     }
-
+    
     public void registrarPunto(Long recorridoId, Double lat, Double lng, Double velocidad) {
         Recorrido recorrido = recorridoRepository.findById(recorridoId)
                 .orElseThrow(() -> new RuntimeException("Recorrido no existe"));
