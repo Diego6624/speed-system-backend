@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import com.example.speedsystem.dto.RecorridoSemanalResponse;
 import com.example.speedsystem.entities.Recorrido;
 
 public interface RecorridoRepository extends JpaRepository<Recorrido, Long>{
@@ -13,4 +15,16 @@ public interface RecorridoRepository extends JpaRepository<Recorrido, Long>{
     List<Recorrido> findByUsuarioIdAndFechaInicioAfter(long usuarioId, LocalDateTime fecha);
     // 🔑 Nuevo método: busca el recorrido activo de un usuario
     Optional<Recorrido> findByUsuarioIdAndActivoTrue(Long usuarioId);
+
+    @Query("""
+        SELECT new com.example.speedsystem.dto.RecorridoSemanalResponse(
+            COALESCE(AVG(r.velocidadProm), 0),
+            COALESCE(SUM(r.distanciaKm), 0),
+            COALESCE(SUM(r.excesosVelocidad), 0)
+        )
+        FROM Recorrido r
+        WHERE r.usuario.id = :usuarioId
+          AND r.fechaInicio >= :fechaInicio
+    """)
+    RecorridoSemanalResponse obtenerAnalisisSemanal(Long usuarioId, LocalDateTime fechaInicio);
 }
