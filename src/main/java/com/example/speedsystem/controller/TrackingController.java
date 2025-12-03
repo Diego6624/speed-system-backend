@@ -32,6 +32,7 @@ public class TrackingController {
         @PathVariable Long id,
         @RequestBody TrackingRequest req
     ) {
+        System.out.println("📍 Punto recibido: " + req.lat() + "," + req.lng() + " vel=" + req.velocidad());
         trackingService.registrarPunto(id, req.lat(), req.lng(), req.velocidad());
     }
 
