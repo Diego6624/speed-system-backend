@@ -18,11 +18,10 @@ public class OSMService {
     private final Gson gson = new Gson();
 
     public Integer obtenerVelocidadMaxima(double lat, double lon) {
-
         String query = """
-                    [out:json][timeout:10];
-                    way["highway"](around:40,%f,%f);
-                    out tags qt;
+                [out:json][timeout:10];
+                way["highway"](around:40,%f,%f);
+                out tags qt;
                 """.formatted(lat, lon);
 
         try {
@@ -30,18 +29,28 @@ public class OSMService {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
+            conn.setConnectTimeout(5000); // timeout de conexión
+            conn.setReadTimeout(5000);    // timeout de lectura
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
             String body = "data=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
             conn.getOutputStream().write(body.getBytes());
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-            JsonObject json = gson.fromJson(br, JsonObject.class);
-            JsonArray elements = json.getAsJsonArray("elements");
-
-            if (elements == null || elements.size() == 0)
+            // Si Overpass responde con error (ej. 504), devolvemos null
+            int status = conn.getResponseCode();
+            if (status != 200) {
+                System.err.println("❌ Overpass respondió con código: " + status);
                 return null;
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            JsonObject json = gson.fromJson(br, JsonObject.class);
+            br.close();
+
+            JsonArray elements = json.getAsJsonArray("elements");
+            if (elements == null || elements.size() == 0) {
+                return null;
+            }
 
             JsonObject way = elements.get(0).getAsJsonObject();
             JsonObject tags = way.getAsJsonObject("tags");
@@ -49,14 +58,13 @@ public class OSMService {
             return extraerMaxSpeed(tags);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            System.err.println("⚠️ Error consultando Overpass: " + e.getMessage());
+            return null; // dejar que ZonaVelocidadService aplique fallback
         }
     }
 
     private Integer extraerMaxSpeed(JsonObject tags) {
-        if (tags == null)
-            return null;
+        if (tags == null) return null;
 
         // 1. Si existe maxspeed, usarlo
         if (tags.has("maxspeed")) {
@@ -85,8 +93,7 @@ public class OSMService {
 
     private Integer parseSpeed(String raw) {
         raw = raw.replaceAll("[^0-9]", "");
-        if (raw.isEmpty())
-            return null;
+        if (raw.isEmpty()) return null;
         return Integer.parseInt(raw);
     }
 
@@ -99,13 +106,13 @@ public class OSMService {
     }
 
     private Integer velocidadPorDefectoPorTipo(String highway) {
-    return switch (highway) {
-        case "trunk" -> 90;
-        case "primary" -> 60;
-        case "secondary" -> 50;
-        case "tertiary" -> 40;
-        case "residential" -> 30;
-        default -> null;
-    };
-}
+        return switch (highway) {
+            case "trunk" -> 90;
+            case "primary" -> 60;
+            case "secondary" -> 50;
+            case "tertiary" -> 40;
+            case "residential" -> 30;
+            default -> null;
+        };
+    }
 }
