@@ -21,25 +21,22 @@ public class TrackingController {
     @PostMapping("/iniciar")
     public Recorrido iniciar(Principal principal) {
         Usuario usuario = usuarioService.getPorCorreo(principal.getName());
+        if (usuario == null) {
+            throw new RuntimeException("Usuario no existe en DB: " + principal.getName());
+        }
         return trackingService.iniciarRecorrido(usuario.getId());
     }
 
     @PostMapping("/{id}/tracking")
     public void tracking(
         @PathVariable Long id,
-        @RequestBody TrackingRequest req,
-        Principal principal
+        @RequestBody TrackingRequest req
     ) {
-        // Opcional: validar que el recorrido pertenece al usuario del token
         trackingService.registrarPunto(id, req.lat(), req.lng(), req.velocidad());
     }
 
     @PutMapping("/{id}/finalizar")
-    public Recorrido finalizar(
-        @PathVariable Long id,
-        Principal principal
-    ) {
-        // Opcional: validar que el recorrido pertenece al usuario del token
+    public Recorrido finalizar(@PathVariable Long id) {
         return trackingService.finalizarRecorrido(id);
     }
 

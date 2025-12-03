@@ -19,7 +19,6 @@ public class RecorridoService {
     private final RecorridoRepository recorridoRepository;
 
     public List<RecorridoResponse> getRecorrido(Long usuarioId) {
-
         return recorridoRepository
                 .findByUsuarioIdOrderByFechaInicioDesc(usuarioId)
                 .stream()
@@ -31,27 +30,23 @@ public class RecorridoService {
                         r.getVelocidadMax(),
                         r.getVelocidadProm(),
                         r.getExcesosVelocidad(),
-                        r.getDuracionMin()
-                ))
+                        r.getDuracionMin()))
                 .toList();
     }
 
     public RecorridoSemanalResponse getRecorridoSemanalResponse(Long usuarioId) {
-
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
 
-        List<Recorrido> recorridos =
-                recorridoRepository.findByUsuarioIdAndFechaInicioAfter(usuarioId, sevenDaysAgo);
+        List<Recorrido> recorridos = recorridoRepository.findByUsuarioIdAndFechaInicioAfter(usuarioId, sevenDaysAgo);
 
         double distanciaTotal = recorridos.stream()
                 .mapToDouble(Recorrido::getDistanciaKm)
                 .sum();
 
-        double velPromedio =
-                recorridos.stream()
-                        .mapToDouble(Recorrido::getVelocidadProm)
-                        .average()
-                        .orElse(0);
+        double velPromedio = recorridos.stream()
+                .mapToDouble(Recorrido::getVelocidadProm)
+                .average()
+                .orElse(0);
 
         int excesosTotal = recorridos.stream()
                 .mapToInt(Recorrido::getExcesosVelocidad)
@@ -60,8 +55,7 @@ public class RecorridoService {
         return new RecorridoSemanalResponse(
                 velPromedio,
                 distanciaTotal,
-                excesosTotal
-        );
+                excesosTotal);
     }
 
     public Recorrido obtenerPorId(Long recorridoId) {

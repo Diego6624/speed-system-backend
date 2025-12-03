@@ -4,9 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.speedsystem.dto.RecorridoResponse;
 import com.example.speedsystem.dto.RecorridoSemanalResponse;
@@ -25,13 +23,15 @@ public class RecorridoController {
     private final UsuarioService usuarioService;
 
     @GetMapping("/my")
-    public ResponseEntity<List<RecorridoResponse>> getRecorrido(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
+    public ResponseEntity<List<RecorridoResponse>> getRecorrido(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
         Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
         return ResponseEntity.ok(recorridoService.getRecorrido(usuario.getId()));
     }
 
     @GetMapping("/my/weekly-stats")
-    public ResponseEntity<RecorridoSemanalResponse> getRecorridoSemanalResponse(@AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
+    public ResponseEntity<RecorridoSemanalResponse> getRecorridoSemanalResponse(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
         Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
         return ResponseEntity.ok(recorridoService.getRecorridoSemanalResponse(usuario.getId()));
     }
