@@ -22,16 +22,20 @@ public class RecorridoController {
     private final RecorridoService recorridoService;
     private final UsuarioService usuarioService;
 
+    // 🗂️ Historial de recorridos del usuario
     @GetMapping("/my")
     public ResponseEntity<List<RecorridoResponse>> getRecorrido(
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
+        @AuthenticationPrincipal org.springframework.security.core.userdetails.User user
+    ) {
         Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
         return ResponseEntity.ok(recorridoService.getRecorrido(usuario.getId()));
     }
 
+    // 📊 Estadísticas semanales del usuario
     @GetMapping("/my/weekly-stats")
     public ResponseEntity<RecorridoSemanalResponse> getRecorridoSemanalResponse(
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user) {
+        @AuthenticationPrincipal org.springframework.security.core.userdetails.User user
+    ) {
         Usuario usuario = usuarioService.getPorCorreo(user.getUsername());
         return ResponseEntity.ok(recorridoService.getRecorridoSemanalResponse(usuario.getId()));
     }
