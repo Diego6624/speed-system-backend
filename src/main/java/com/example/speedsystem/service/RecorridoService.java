@@ -44,22 +44,23 @@ public class RecorridoService {
                                 .filter(r -> r.getDistanciaKm() != null)
                                 .mapToDouble(Recorrido::getDistanciaKm)
                                 .sum();
-
+                System.out.println("📊 distanciaTotal: " + distanciaTotal);
                 double velPromedio = recorridos.stream()
                                 .filter(r -> r.getVelocidadProm() != null)
                                 .mapToDouble(Recorrido::getVelocidadProm)
                                 .average()
                                 .orElse(0);
-
+                System.out.println("📊 velPromedio: " + velPromedio);
                 int excesosTotal = recorridos.stream()
                                 .filter(r -> r.getExcesosVelocidad() != null)
                                 .mapToInt(Recorrido::getExcesosVelocidad)
                                 .sum();
-
+                System.out.println("📊 excesosTotal: " + excesosTotal);
                 return new RecorridoSemanalResponse(
                                 velPromedio,
                                 distanciaTotal,
                                 excesosTotal);
+
         }
 
         public Recorrido obtenerPorId(Long recorridoId) {
