@@ -16,50 +16,55 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RecorridoService {
 
-    private final RecorridoRepository recorridoRepository;
+        private final RecorridoRepository recorridoRepository;
 
-    public List<RecorridoResponse> getRecorrido(Long usuarioId) {
-        return recorridoRepository
-                .findByUsuarioIdOrderByFechaInicioDesc(usuarioId)
-                .stream()
-                .map(r -> new RecorridoResponse(
-                        r.getId(),
-                        r.getFechaInicio(),
-                        r.getFechaFin(),
-                        r.getDistanciaKm(),
-                        r.getVelocidadMax(),
-                        r.getVelocidadProm(),
-                        r.getExcesosVelocidad(),
-                        r.getDuracionMin()))
-                .toList();
-    }
+        public List<RecorridoResponse> getRecorrido(Long usuarioId) {
+                return recorridoRepository
+                                .findByUsuarioIdOrderByFechaInicioDesc(usuarioId)
+                                .stream()
+                                .map(r -> new RecorridoResponse(
+                                                r.getId(),
+                                                r.getFechaInicio(),
+                                                r.getFechaFin(),
+                                                r.getDistanciaKm(),
+                                                r.getVelocidadMax(),
+                                                r.getVelocidadProm(),
+                                                r.getExcesosVelocidad(),
+                                                r.getDuracionMin()))
+                                .toList();
+        }
 
-    public RecorridoSemanalResponse getRecorridoSemanalResponse(Long usuarioId) {
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        public RecorridoSemanalResponse getRecorridoSemanalResponse(Long usuarioId) {
+                LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
 
-        List<Recorrido> recorridos = recorridoRepository.findByUsuarioIdAndFechaInicioAfter(usuarioId, sevenDaysAgo);
+                List<Recorrido> recorridos = recorridoRepository.findByUsuarioIdAndFechaInicioAfter(usuarioId,
+                                sevenDaysAgo);
 
-        double distanciaTotal = recorridos.stream()
-                .mapToDouble(Recorrido::getDistanciaKm)
-                .sum();
+                double distanciaTotal = recorridos.stream()
+                                .filter(r -> r.getDistanciaKm() != null)
+                                .mapToDouble(Recorrido::getDistanciaKm)
+                                .sum();
 
-        double velPromedio = recorridos.stream()
-                .mapToDouble(Recorrido::getVelocidadProm)
-                .average()
-                .orElse(0);
+                double velPromedio = recorridos.stream()
+                                .filter(r -> r.getVelocidadProm() != null)
+                                .mapToDouble(Recorrido::getVelocidadProm)
+                                .average()
+                                .orElse(0);
 
-        int excesosTotal = recorridos.stream()
-                .mapToInt(Recorrido::getExcesosVelocidad)
-                .sum();
+                int excesosTotal = recorridos.stream()
+                                .filter(r -> r.getExcesosVelocidad() != null)
+                                .mapToInt(Recorrido::getExcesosVelocidad)
+                                .sum();
 
-        return new RecorridoSemanalResponse(
-                velPromedio,
-                distanciaTotal,
-                excesosTotal);
-    }
+                return new RecorridoSemanalResponse(
+                                velPromedio,
+                                distanciaTotal,
+                                excesosTotal);
+        }
 
-    public Recorrido obtenerPorId(Long recorridoId) {
-        return recorridoRepository.findById(recorridoId)
-                .orElseThrow(() -> new RuntimeException("Recorrido no encontrado con ID: " + recorridoId));
-    }
+        public Recorrido obtenerPorId(Long recorridoId) {
+                return recorridoRepository.findById(recorridoId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Recorrido no encontrado con ID: " + recorridoId));
+        }
 }
